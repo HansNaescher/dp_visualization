@@ -364,6 +364,16 @@ selected_categories = st.sidebar.multiselect(
     default=categories
 )
 
+# NEUER FILTER: Design Principles Filter
+st.sidebar.subheader("Design Principles")
+all_dp_names = sorted(df['name'].unique().tolist())
+selected_dp_names = st.sidebar.multiselect(
+    "Design Principles auswählen:",
+    options=all_dp_names,
+    default=all_dp_names,
+    help="Wählen Sie spezifische Design Principles für die Analyse aus"
+)
+
 # Farbpalette für Kategorien
 category_colors = {
     'Umsetzung': '#FF6B6B',
@@ -376,9 +386,12 @@ category_colors = {
 
 
 # Datenverarbeitung für Visualisierung
-def prepare_visualization_data(df, selected_sources, show_mode, selected_categories):
-    # Nach Kategorien filtern
-    filtered_df = df[df['category'].isin(selected_categories)]
+def prepare_visualization_data(df, selected_sources, show_mode, selected_categories, selected_dp_names):
+    # Nach Kategorien und Design Principles filtern
+    filtered_df = df[
+        (df['category'].isin(selected_categories)) &
+        (df['name'].isin(selected_dp_names))
+        ]
 
     plot_data = []
 
@@ -387,6 +400,7 @@ def prepare_visualization_data(df, selected_sources, show_mode, selected_categor
             # Durchschnittswerte berechnen
             relevanz_values = []
             dringlichkeit_values = []
+            sources_used = []
 
             for source in selected_sources:
                 rel_col = f"{source}_relevanz"
@@ -395,6 +409,7 @@ def prepare_visualization_data(df, selected_sources, show_mode, selected_categor
                 if rel_col in row and row[rel_col] is not None:
                     relevanz_values.append(row[rel_col])
                     dringlichkeit_values.append(row[dring_col])
+                    sources_used.append(source_labels[source])
 
             if relevanz_values:
                 avg_relevanz = np.mean(relevanz_values)
@@ -405,7 +420,8 @@ def prepare_visualization_data(df, selected_sources, show_mode, selected_categor
                     'category': row['category'],
                     'relevanz': avg_relevanz,
                     'dringlichkeit': avg_dringlichkeit,
-                    'source': 'Durchschnitt',
+                    'source': f"Durchschnitt ({', '.join(sources_used)})",
+                    'sources_list': sources_used,
                     'color': category_colors.get(row['category'], '#999999')
                 })
         else:
@@ -421,19 +437,56 @@ def prepare_visualization_data(df, selected_sources, show_mode, selected_categor
                         'relevanz': row[rel_col],
                         'dringlichkeit': row[dring_col],
                         'source': source_labels[source],
+                        'sources_list': [source_labels[source]],
                         'color': category_colors.get(row['category'], '#999999')
                     })
 
     return pd.DataFrame(plot_data)
 
 
+# NEUE FUNKTION: Daten für verbessertes Hovering gruppieren
+def prepare_grouped_visualization_data(viz_df):
+    """Gruppiert Daten mit gleichen Koordinaten für verbessertes Hovering"""
+    if viz_df.empty:
+        return viz_df
+
+    # Gruppiere nach name, category, relevanz, dringlichkeit
+    grouped_data = []
+
+    for (name, category, relevanz, dringlichkeit), group in viz_df.groupby(
+            ['name', 'category', 'relevanz', 'dringlichkeit']):
+        sources = group['source'].tolist()
+        sources_list = []
+        for source_list in group['sources_list']:
+            sources_list.extend(source_list)
+
+        # Entferne Duplikate und sortiere
+        unique_sources = sorted(list(set(sources_list)))
+
+        grouped_data.append({
+            'name': name,
+            'category': category,
+            'relevanz': relevanz,
+            'dringlichkeit': dringlichkeit,
+            'sources': ', '.join(sources),
+            'sources_list': unique_sources,
+            'sources_count': len(unique_sources),
+            'color': category_colors.get(category, '#999999')
+        })
+
+    return pd.DataFrame(grouped_data)
+
+
 # Visualisierungsdaten erstellen
-viz_df = prepare_visualization_data(df, selected_sources, show_mode, selected_categories)
+viz_df = prepare_visualization_data(df, selected_sources, show_mode, selected_categories, selected_dp_names)
 
 # Hauptbereich
 if not viz_df.empty:
+    # Daten für verbessertes Hovering gruppieren
+    grouped_viz_df = prepare_grouped_visualization_data(viz_df)
+
     # Statistiken anzeigen
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric("📊 Datenpunkte", len(viz_df))
@@ -449,6 +502,10 @@ if not viz_df.empty:
     with col4:
         num_categories = len(selected_categories)
         st.metric("🏷️ Kategorien", num_categories)
+
+    with col5:
+        num_dp = len(selected_dp_names)
+        st.metric("🎯 Design Principles", num_dp)
 
     st.markdown("---")
 
@@ -485,22 +542,32 @@ if not viz_df.empty:
         layer="below"
     )
 
-    # Datenpunkte nach Kategorie gruppieren
-    for category in viz_df['category'].unique():
-        category_data = viz_df[viz_df['category'] == category]
+    # Datenpunkte nach Kategorie gruppieren - mit verbessertem Hovering
+    for category in grouped_viz_df['category'].unique():
+        category_data = grouped_viz_df[grouped_viz_df['category'] == category]
+
+        # Erstelle Hover-Text mit allen Quellen
+        hover_text = []
+        for _, row in category_data.iterrows():
+            sources_text = ', '.join(row['sources_list'])
+            if row['sources_count'] > 1:
+                hover_text.append(f"{row['name']}<br>Quellen: {sources_text}<br>({row['sources_count']} Quellen)")
+            else:
+                hover_text.append(f"{row['name']}<br>Quelle: {sources_text}")
 
         fig.add_trace(go.Scatter(
             x=category_data['relevanz'],
             y=category_data['dringlichkeit'],
             mode='markers',
             name=category,
-            text=category_data['name'] + '<br>Quelle: ' + category_data['source'],
+            text=hover_text,
             textposition="top center",
             marker=dict(
-                size=12,
+                size=12 + category_data['sources_count'] * 2,  # Größe basierend auf Anzahl Quellen
                 color=category_colors.get(category, '#999999'),
                 opacity=0.8,
-                line=dict(width=2, color='white')
+                line=dict(width=2, color='white'),
+                symbol='circle'
             ),
             hovertemplate='<b>%{text}</b><br>Relevanz: %{x}<br>Dringlichkeit: %{y}<extra></extra>'
         ))
@@ -541,12 +608,17 @@ if not viz_df.empty:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # Zusätzliche Info
+    st.info(
+        "💡 **Hover-Verbesserung**: Punkte mit gleichen Bewertungen für ein Design Principle zeigen alle Quellen an. Größere Punkte = mehr Quellen mit gleichen Werten.")
+
     # Detailanalyse
     st.markdown("---")
     st.subheader("📊 Detailanalyse")
 
     # Tabs für verschiedene Ansichten
-    tab1, tab2, tab3 = st.tabs(["📋 Datentabelle", "📈 Verteilungsanalyse", "🔍 Top/Low Performer"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📋 Datentabelle", "📈 Verteilungsanalyse", "🔍 Top/Low Performer", "🎯 Konsistenz-Analyse"])
 
     with tab1:
         st.dataframe(
@@ -599,6 +671,40 @@ if not viz_df.empty:
                 ['name', 'category', 'relevanz', 'dringlichkeit', 'priority_score']]
             st.dataframe(low_items.round(2), use_container_width=True)
 
+    with tab4:
+        st.subheader("🎯 Konsistenz zwischen Quellen")
+
+        # Berechne Konsistenz-Metriken
+        consistency_data = []
+        for dp_name in selected_dp_names:
+            dp_data = viz_df[viz_df['name'] == dp_name]
+            if len(dp_data) > 1:
+                rel_std = dp_data['relevanz'].std()
+                dring_std = dp_data['dringlichkeit'].std()
+                consistency_data.append({
+                    'Design Principle': dp_name,
+                    'Anzahl Quellen': len(dp_data),
+                    'Relevanz Std': rel_std,
+                    'Dringlichkeit Std': dring_std,
+                    'Gesamt Konsistenz': (rel_std + dring_std) / 2
+                })
+
+        if consistency_data:
+            consistency_df = pd.DataFrame(consistency_data)
+            consistency_df = consistency_df.sort_values('Gesamt Konsistenz')
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.write("**🎯 Konsistenteste Bewertungen** (niedrige Standardabweichung)")
+                st.dataframe(consistency_df.head(10).round(2), use_container_width=True)
+
+            with col2:
+                st.write("**⚠️ Inkonsistenteste Bewertungen** (hohe Standardabweichung)")
+                st.dataframe(consistency_df.tail(10).round(2), use_container_width=True)
+        else:
+            st.info("Keine Konsistenz-Analyse möglich - nur eine Quelle pro Design Principle ausgewählt.")
+
     # Kategorie-Analyse
     st.markdown("---")
     st.subheader("🏷️ Kategorie-Analyse")
@@ -632,10 +738,12 @@ st.sidebar.markdown("---")
 st.sidebar.info("""
 **ℹ️ Hinweise zur Nutzung:**
 
-- Wählen Sie verschiedene Datenquellen für die Analyse
-- Verwenden Sie Durchschnittswerte für aggregierte Sichten
-- Filtern Sie nach Kategorien für fokussierte Analysen
-- Nutzen Sie die Tabs für detaillierte Einblicke
+- **Datenquellen**: Wählen Sie Workshop und/oder Interviews
+- **Design Principles**: Filtern Sie nach spezifischen DPs
+- **Durchschnittswerte**: Für aggregierte Sichten
+- **Hovering**: Zeigt alle Quellen mit gleichen Werten
+- **Punktgröße**: Größere Punkte = mehr übereinstimmende Quellen
+- **Konsistenz**: Neue Analyse der Bewertungsunterschiede
 """)
 
 # Footer
@@ -644,7 +752,8 @@ st.markdown(
     """
     <div style='text-align: center; color: gray;'>
     🔬 Design Principles Forschungsanalyse | 
-    Entwickelt für Workshop- und Interview-Datenauswertung
+    Entwickelt für Workshop- und Interview-Datenauswertung | 
+    Erweitert mit DP-Filter und verbessertem Hovering
     </div>
     """,
     unsafe_allow_html=True
