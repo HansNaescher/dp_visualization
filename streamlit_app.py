@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 from plotly.subplots import make_subplots
+from data import design_principles_data
 
 # Seitenkonfiguration
 st.set_page_config(
@@ -17,310 +18,11 @@ st.title("📊 Design Principles Analyse - 2x2 Matrix")
 st.markdown("---")
 
 
-# Daten strukturieren
+# Daten laden aus zentraler Funktion
 @st.cache_data
 def load_data():
-    data = [
-        {
-            "name": "Arbeitsablaufintegration",
-            "category": "Umsetzung",
-            "workshop_relevanz": 7, "workshop_dringlichkeit": 7,
-            "I1_relevanz": 7, "I1_dringlichkeit": 6,
-            "I2_relevanz": 7, "I2_dringlichkeit": 6,
-            "I3_relevanz": 7, "I3_dringlichkeit": 8,
-            "I4_relevanz": 9, "I4_dringlichkeit": 7,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Bedarfsgerechte Erklärungen",
-            "category": "User Interface",
-            "workshop_relevanz": 5, "workshop_dringlichkeit": 5,
-            "I1_relevanz": 5, "I1_dringlichkeit": 5,
-            "I2_relevanz": 6, "I2_dringlichkeit": 4,
-            "I3_relevanz": 5, "I3_dringlichkeit": 5,
-            "I4_relevanz": 6, "I4_dringlichkeit": 5,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Berücksichtigung unterschiedlicher Nutzergruppen",
-            "category": "Interaktion",
-            "workshop_relevanz": 8, "workshop_dringlichkeit": 8,
-            "I1_relevanz": 8, "I1_dringlichkeit": 7,
-            "I2_relevanz": 8, "I2_dringlichkeit": 7,
-            "I3_relevanz": 4, "I3_dringlichkeit": 3,
-            "I4_relevanz": 8, "I4_dringlichkeit": 7,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Datengrundlage",
-            "category": "Interaktion",
-            "workshop_relevanz": 5, "workshop_dringlichkeit": 1,
-            "I1_relevanz": 5, "I1_dringlichkeit": 1,
-            "I2_relevanz": 5, "I2_dringlichkeit": 4,
-            "I3_relevanz": 7, "I3_dringlichkeit": 8,
-            "I4_relevanz": 5, "I4_dringlichkeit": 1,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Dokumentation",
-            "category": "Monitoring",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 4,
-            "I1_relevanz": 8, "I1_dringlichkeit": 4,
-            "I2_relevanz": 8, "I2_dringlichkeit": 8,
-            "I3_relevanz": 5, "I3_dringlichkeit": 3,
-            "I4_relevanz": None, "I4_dringlichkeit": None,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Erklärung des KI Systems",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 5, "workshop_dringlichkeit": 2,
-            "I1_relevanz": 5, "I1_dringlichkeit": 3,
-            "I2_relevanz": 4, "I2_dringlichkeit": 3,
-            "I3_relevanz": 5, "I3_dringlichkeit": 2,
-            "I4_relevanz": 7, "I4_dringlichkeit": 3,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Erklärungstypen",
-            "category": "User Interface",
-            "workshop_relevanz": 7, "workshop_dringlichkeit": 2,
-            "I1_relevanz": 7, "I1_dringlichkeit": 2,
-            "I2_relevanz": 7, "I2_dringlichkeit": 2,
-            "I3_relevanz": 7, "I3_dringlichkeit": 5,
-            "I4_relevanz": 7, "I4_dringlichkeit": 2,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Explanation Style",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 5, "workshop_dringlichkeit": 7.5,
-            "I1_relevanz": 4, "I1_dringlichkeit": 6.5,
-            "I2_relevanz": 5, "I2_dringlichkeit": 6.5,
-            "I3_relevanz": 5, "I3_dringlichkeit": 6.5,
-            "I4_relevanz": 7, "I4_dringlichkeit": 6,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Fallbasierte Vergleiche",
-            "category": "Interaktion",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 8,
-            "I1_relevanz": 6, "I1_dringlichkeit": 7,
-            "I2_relevanz": 6, "I2_dringlichkeit": 7,
-            "I3_relevanz": 6, "I3_dringlichkeit": 8,
-            "I4_relevanz": 9, "I4_dringlichkeit": 9,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Informationen zur KI und ihrem Anwendungskontext",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 3, "workshop_dringlichkeit": 6,
-            "I1_relevanz": 3, "I1_dringlichkeit": 6.5,
-            "I2_relevanz": 4, "I2_dringlichkeit": 5.5,
-            "I3_relevanz": 3, "I3_dringlichkeit": 4,
-            "I4_relevanz": 6, "I4_dringlichkeit": 6,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Informationsdarstellung",
-            "category": "Fallbasiert",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 7,
-            "I1_relevanz": 6, "I1_dringlichkeit": 5,
-            "I2_relevanz": 6, "I2_dringlichkeit": 6,
-            "I3_relevanz": 6, "I3_dringlichkeit": 4,
-            "I4_relevanz": 7, "I4_dringlichkeit": 6,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Interaktionsdesign",
-            "category": "Interaktion",
-            "workshop_relevanz": 7, "workshop_dringlichkeit": 8,
-            "I1_relevanz": 6, "I1_dringlichkeit": 7,
-            "I2_relevanz": 7, "I2_dringlichkeit": 7,
-            "I3_relevanz": 7, "I3_dringlichkeit": 8,
-            "I4_relevanz": 8, "I4_dringlichkeit": 7,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Kognitive Aspekte und Nutzerengagement",
-            "category": "User Interface",
-            "workshop_relevanz": 1, "workshop_dringlichkeit": 3,
-            "I1_relevanz": 2, "I1_dringlichkeit": 4,
-            "I2_relevanz": 4, "I2_dringlichkeit": 4,
-            "I3_relevanz": 5, "I3_dringlichkeit": 5,
-            "I4_relevanz": 6, "I4_dringlichkeit": 3,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Kontextinformationen",
-            "category": "Umsetzung",
-            "workshop_relevanz": 2, "workshop_dringlichkeit": 4,
-            "I1_relevanz": 2, "I1_dringlichkeit": 5,
-            "I2_relevanz": 3, "I2_dringlichkeit": 5,
-            "I3_relevanz": 2, "I3_dringlichkeit": 4.5,
-            "I4_relevanz": 7, "I4_dringlichkeit": 6,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Kontrastierende Erklärungen",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 4, "workshop_dringlichkeit": 1,
-            "I1_relevanz": 4, "I1_dringlichkeit": 1,
-            "I2_relevanz": 4, "I2_dringlichkeit": 1,
-            "I3_relevanz": 4, "I3_dringlichkeit": 1,
-            "I4_relevanz": 5, "I4_dringlichkeit": 1,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Modellverhalten",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 5, "workshop_dringlichkeit": 8.5,
-            "I1_relevanz": 5, "I1_dringlichkeit": 7.5,
-            "I2_relevanz": 5, "I2_dringlichkeit": 5.5,
-            "I3_relevanz": 5, "I3_dringlichkeit": 6.5,
-            "I4_relevanz": 6, "I4_dringlichkeit": 8,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Monitoring",
-            "category": "Monitoring",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 4,
-            "I1_relevanz": 8, "I1_dringlichkeit": 4,
-            "I2_relevanz": 6, "I2_dringlichkeit": 6,
-            "I3_relevanz": None, "I3_dringlichkeit": None,
-            "I4_relevanz": None, "I4_dringlichkeit": None,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Professionelle Autonomie",
-            "category": "Interaktion",
-            "workshop_relevanz": 7, "workshop_dringlichkeit": 9,
-            "I1_relevanz": 7, "I1_dringlichkeit": 8,
-            "I2_relevanz": 8, "I2_dringlichkeit": 9,
-            "I3_relevanz": 7, "I3_dringlichkeit": 9,
-            "I4_relevanz": 8, "I4_dringlichkeit": 9,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Reporting",
-            "category": "Monitoring",
-            "workshop_relevanz": 4, "workshop_dringlichkeit": 4,
-            "I1_relevanz": 6, "I1_dringlichkeit": 4,
-            "I2_relevanz": 5, "I2_dringlichkeit": 5,
-            "I3_relevanz": None, "I3_dringlichkeit": None,
-            "I4_relevanz": None, "I4_dringlichkeit": None,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Textuelle Erklärungen",
-            "category": "User Interface",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 4,
-            "I1_relevanz": 8, "I1_dringlichkeit": 8,
-            "I2_relevanz": 6, "I2_dringlichkeit": 5,
-            "I3_relevanz": 7, "I3_dringlichkeit": 6,
-            "I4_relevanz": 8, "I4_dringlichkeit": 6,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Training und Nutzungsinformationen",
-            "category": "Systembeschreibung/Systemarchitektur",
-            "workshop_relevanz": 4, "workshop_dringlichkeit": 2,
-            "I1_relevanz": 5, "I1_dringlichkeit": 9,
-            "I2_relevanz": 5, "I2_dringlichkeit": 3,
-            "I3_relevanz": 6, "I3_dringlichkeit": 6,
-            "I4_relevanz": 9, "I4_dringlichkeit": 9,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Unerwartete Entscheidungen erklären",
-            "category": "Fallbasiert",
-            "workshop_relevanz": 6, "workshop_dringlichkeit": 3,
-            "I1_relevanz": 6, "I1_dringlichkeit": 5,
-            "I2_relevanz": 6, "I2_dringlichkeit": 5,
-            "I3_relevanz": 7, "I3_dringlichkeit": 6,
-            "I4_relevanz": 7, "I4_dringlichkeit": 3,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Usability",
-            "category": "User Interface",
-            "workshop_relevanz": 9, "workshop_dringlichkeit": 9,
-            "I1_relevanz": 9, "I1_dringlichkeit": 8,
-            "I2_relevanz": 9, "I2_dringlichkeit": 8,
-            "I3_relevanz": 4, "I3_dringlichkeit": 3,
-            "I4_relevanz": 9, "I4_dringlichkeit": 9,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Visualisierung von Regeln",
-            "category": "Fallbasiert",
-            "workshop_relevanz": 8, "workshop_dringlichkeit": 5,
-            "I1_relevanz": 9, "I1_dringlichkeit": 5,
-            "I2_relevanz": 8, "I2_dringlichkeit": 5,
-            "I3_relevanz": 8, "I3_dringlichkeit": 5,
-            "I4_relevanz": 9, "I4_dringlichkeit": 5,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Visuelle Erklärungen",
-            "category": "User Interface",
-            "workshop_relevanz": 8, "workshop_dringlichkeit": 9,
-            "I1_relevanz": 7, "I1_dringlichkeit": 5,
-            "I2_relevanz": 8, "I2_dringlichkeit": 8,
-            "I3_relevanz": 6, "I3_dringlichkeit": 4,
-            "I4_relevanz": 8, "I4_dringlichkeit": 9,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Regionale Zusammenhänge",
-            "category": "Fallbasiert",
-            "workshop_relevanz": 9, "workshop_dringlichkeit": 9,
-            "I1_relevanz": None, "I1_dringlichkeit": None,
-            "I2_relevanz": None, "I2_dringlichkeit": None,
-            "I3_relevanz": None, "I3_dringlichkeit": None,
-            "I4_relevanz": None, "I4_dringlichkeit": None,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        },
-        {
-            "name": "Zeitkomponente",
-            "category": "Fallbasiert",
-            "workshop_relevanz": 8, "workshop_dringlichkeit": 9,
-            "I1_relevanz": None, "I1_dringlichkeit": None,
-            "I2_relevanz": None, "I2_dringlichkeit": None,
-            "I3_relevanz": None, "I3_dringlichkeit": None,
-            "I4_relevanz": None, "I4_dringlichkeit": None,
-            "I5_relevanz": None, "I5_dringlichkeit": None,
-            "I6_relevanz": None, "I6_dringlichkeit": None
-        }
-    ]
-
-    return pd.DataFrame(data)
+    """Lädt alle Design Principles Daten inklusive Interview 5 und neue DPs"""
+    return pd.DataFrame(design_principles_data)
 
 
 # Daten laden
@@ -344,7 +46,8 @@ source_labels = {
 
 selected_sources = []
 for source in all_sources:
-    if st.sidebar.checkbox(source_labels[source], value=source in ['workshop', 'I1', 'I2', 'I3', 'I4'], key=source):
+    if st.sidebar.checkbox(source_labels[source], value=source in ['workshop', 'I1', 'I2', 'I3', 'I4', 'I5'],
+                           key=source):
         selected_sources.append(source)
 
 # Darstellungsmodus
@@ -738,12 +441,13 @@ st.sidebar.markdown("---")
 st.sidebar.info("""
 **ℹ️ Hinweise zur Nutzung:**
 
-- **Datenquellen**: Wählen Sie Workshop und/oder Interviews
-- **Design Principles**: Filtern Sie nach spezifischen DPs
+- **Datenquellen**: Wählen Sie Workshop und/oder Interviews (I1-I5)
+- **Design Principles**: Filtern Sie nach spezifischen DPs (32 verfügbar)
 - **Durchschnittswerte**: Für aggregierte Sichten
 - **Hovering**: Zeigt alle Quellen mit gleichen Werten
 - **Punktgröße**: Größere Punkte = mehr übereinstimmende Quellen
 - **Konsistenz**: Neue Analyse der Bewertungsunterschiede
+- **NEU**: Interview 5 Daten und 5 zusätzliche Design Principles
 """)
 
 # Footer
@@ -753,7 +457,8 @@ st.markdown(
     <div style='text-align: center; color: gray;'>
     🔬 Design Principles Forschungsanalyse | 
     Entwickelt für Workshop- und Interview-Datenauswertung | 
-    Erweitert mit DP-Filter und verbessertem Hovering
+    Erweitert mit DP-Filter, Interview 5 und verbessertem Hovering | 
+    📊 Jetzt mit 32 Design Principles
     </div>
     """,
     unsafe_allow_html=True
