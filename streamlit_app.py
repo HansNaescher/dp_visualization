@@ -218,7 +218,7 @@ if not viz_df.empty:
     # Quadranten-Hintergrund
     fig.add_shape(
         type="rect",
-        x0=0, y0=5, x1=5, y1=10,
+        x0=5, y0=0, x1=10, y1=5,
         fillcolor="rgba(255,0,0,0.1)",
         line=dict(width=0),
         layer="below"
@@ -239,7 +239,7 @@ if not viz_df.empty:
     )
     fig.add_shape(
         type="rect",
-        x0=5, y0=0, x1=10, y1=5,
+        x0=0, y0=5, x1=5, y1=10,
         fillcolor="rgba(0,255,0,0.1)",
         line=dict(width=0),
         layer="below"
@@ -259,8 +259,8 @@ if not viz_df.empty:
                 hover_text.append(f"{row['name']}<br>Quelle: {sources_text}")
 
         fig.add_trace(go.Scatter(
-            x=category_data['relevanz'],
-            y=category_data['dringlichkeit'],
+            x=category_data['dringlichkeit'],  # x-Achse ist jetzt Dringlichkeit
+            y=category_data['relevanz'],      # y-Achse ist jetzt Relevanz
             mode='markers',
             name=category,
             text=hover_text,
@@ -272,7 +272,7 @@ if not viz_df.empty:
                 line=dict(width=2, color='white'),
                 symbol='circle'
             ),
-            hovertemplate='<b>%{text}</b><br>Relevanz: %{x}<br>Dringlichkeit: %{y}<extra></extra>'
+            hovertemplate='<b>%{text}</b><br>Dringlichkeit: %{x}<br>Relevanz: %{y}<extra></extra>'
         ))
 
     # Layout anpassen
@@ -282,8 +282,8 @@ if not viz_df.empty:
             'x': 0.5,
             'font': {'size': 20}
         },
-        xaxis_title="Relevanz",
-        yaxis_title="Dringlichkeit",
+        xaxis_title="Dringlichkeit",  # Titel der x-Achse geändert
+        yaxis_title="Relevanz",       # Titel der y-Achse geändert
         xaxis=dict(range=[0, 10], dtick=1, gridcolor='lightgray'),
         yaxis=dict(range=[0, 10], dtick=1, gridcolor='lightgray'),
         width=800,
@@ -300,13 +300,13 @@ if not viz_df.empty:
     )
 
     # Quadranten-Labels hinzufügen
-    fig.add_annotation(x=2.5, y=7.5, text="Hoch Relevant<br>Hoch Dringlich", showarrow=False,
+    fig.add_annotation(x=7.5, y=2.5, text="Hoch Dringlich<br>Wenig Relevant", showarrow=False,
                        font=dict(size=14, color="gray"), bgcolor="rgba(255,255,255,0.8)")
-    fig.add_annotation(x=7.5, y=7.5, text="Sehr Relevant<br>Hoch Dringlich", showarrow=False,
+    fig.add_annotation(x=7.5, y=7.5, text="Hoch Dringlich<br>Sehr Relevant", showarrow=False,
                        font=dict(size=14, color="gray"), bgcolor="rgba(255,255,255,0.8)")
-    fig.add_annotation(x=2.5, y=2.5, text="Hoch Relevant<br>Wenig Dringlich", showarrow=False,
+    fig.add_annotation(x=2.5, y=2.5, text="Wenig Dringlich<br>Wenig Relevant", showarrow=False,
                        font=dict(size=14, color="gray"), bgcolor="rgba(255,255,255,0.8)")
-    fig.add_annotation(x=7.5, y=2.5, text="Sehr Relevant<br>Wenig Dringlich", showarrow=False,
+    fig.add_annotation(x=2.5, y=7.5, text="Wenig Dringlich<br>Sehr Relevant", showarrow=False,
                        font=dict(size=14, color="gray"), bgcolor="rgba(255,255,255,0.8)")
 
     st.plotly_chart(fig, use_container_width=True)
@@ -442,24 +442,4 @@ st.sidebar.info("""
 **ℹ️ Hinweise zur Nutzung:**
 
 - **Datenquellen**: Wählen Sie Workshop und/oder Interviews (I1-I5)
-- **Design Principles**: Filtern Sie nach spezifischen DPs (32 verfügbar)
-- **Durchschnittswerte**: Für aggregierte Sichten
-- **Hovering**: Zeigt alle Quellen mit gleichen Werten
-- **Punktgröße**: Größere Punkte = mehr übereinstimmende Quellen
-- **Konsistenz**: Neue Analyse der Bewertungsunterschiede
-- **NEU**: Interview 5 Daten und 5 zusätzliche Design Principles
-""")
-
-# Footer
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center; color: gray;'>
-    🔬 Design Principles Forschungsanalyse | 
-    Entwickelt für Workshop- und Interview-Datenauswertung | 
-    Erweitert mit DP-Filter, Interview 5 und verbessertem Hovering | 
-    📊 Jetzt mit 32 Design Principles
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+- **Design Principles**: Filtern Sie nach spezifischen DPs (32
