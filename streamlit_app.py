@@ -442,4 +442,24 @@ st.sidebar.info("""
 **ℹ️ Hinweise zur Nutzung:**
 
 - **Datenquellen**: Wählen Sie Workshop und/oder Interviews (I1-I5)
-- **Design Principles**: Filtern Sie nach spezifischen DPs (32
+- **Design Principles**: Filtern Sie nach spezifischen DPs (32 verfügbar)
+- **Durchschnittswerte**: Für aggregierte Sichten
+- **Hovering**: Zeigt alle Quellen mit gleichen Werten
+- **Punktgröße**: Größere Punkte = mehr übereinstimmende Quellen
+- **Konsistenz**: Neue Analyse der Bewertungsunterschiede
+- **NEU**: Interview 5 Daten und 5 zusätzliche Design Principles
+""")
+
+# Footer
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: gray;'>
+    🔬 Design Principles Forschungsanalyse | 
+    Entwickelt für Workshop- und Interview-Datenauswertung | 
+    Erweitert mit DP-Filter, Interview 5 und verbessertem Hovering | 
+    📊 Jetzt mit 32 Design Principles
+    </div>
+    """,
+    unsafe_allow_html=True
+)
